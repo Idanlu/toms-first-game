@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "Tom's Tunes",
+    "slug": "toms-tunes",
+    "version": "1.0.0",
+    "orientation": "landscape",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "assets/**"
+    ],
+    "android": {
+      "package": "com.tomstunes.game"
+    },
+    "plugins": [
+      "expo-audio"
+    ]
+  }
+}
