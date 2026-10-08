@@ -31,7 +31,7 @@ Regenerate only selected instruments by using names from `INSTRUMENTS` in `scrip
 node scripts/generate-instruments.mjs --only flute xylophone
 ```
 
-The generator writes 1024x1024 PNGs to `assets/symbols/`, normalizes the edge-connected background to the tile color `#FFFDF6`, and only replaces selected assets after generation succeeds.
+The generator writes 1024x1024 PNGs to `assets/symbols/`, normalizes the edge-connected background to the tile color `#FFFDF6`, and only replaces selected assets after generation succeeds. If `assets/symbols/<basename>.jpg` exists, it is padded to a square and passed to FLUX as a visual reference; the JPG is left untouched.
 
 ## Add An Instrument
 
