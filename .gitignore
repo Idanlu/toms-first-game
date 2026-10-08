@@ -5,3 +5,4 @@ dist/
 android/
 ios/
 .vscode/
+.venv-imagegen/
