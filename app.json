@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "toms-first-game",
+    "name": "Tom's First Game",
     "slug": "toms-first-game",
     "version": "1.0.0",
     "orientation": "landscape",
@@ -11,6 +11,10 @@
     ],
     "android": {
       "package": "com.tomstunes.game",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#B9E2F3"
+      },
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
