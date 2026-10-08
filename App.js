@@ -6,9 +6,12 @@ import {
   SafeAreaView,
   StatusBar,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
 import { createAudioPlayer } from 'expo-audio';
+import { useFonts } from 'expo-font';
+import { Fredoka_600SemiBold, Fredoka_700Bold } from '@expo-google-fonts/fredoka';
 
 // Change this value to 2, 3, or 4 to increase difficulty.
 const TOTAL_OPTIONS = 2;
@@ -97,7 +100,13 @@ function InstrumentButton({ instrument, disabled, onPress, success, choiceStyle 
 }
 
 export default function App() {
+  const [fontsLoaded] = useFonts({
+    Fredoka: Fredoka_600SemiBold,
+    FredokaBold: Fredoka_700Bold,
+  });
   const [round, setRound] = useState(null);
+  const [screen, setScreen] = useState('menu');
+  const [roundNumber, setRoundNumber] = useState(1);
   const [phase, setPhase] = useState('audio');
   const [successId, setSuccessId] = useState(null);
   const soundRef = useRef(null);
@@ -141,7 +150,6 @@ export default function App() {
 
   useEffect(() => {
     mounted.current = true;
-    setRound(makeRound());
     return () => {
       mounted.current = false;
       clearTimeout(teachingTimer.current);
@@ -149,6 +157,30 @@ export default function App() {
       stopSound();
     };
   }, []);
+
+  const startGame = () => {
+    clearTimeout(teachingTimer.current);
+    clearTimeout(nextRoundTimer.current);
+    stopSound();
+    setRoundNumber(1);
+    setSuccessId(null);
+    setPhase('audio');
+    setRound(makeRound());
+    setScreen('game');
+  };
+
+  const returnToMenu = () => {
+    clearTimeout(teachingTimer.current);
+    teachingTimer.current = null;
+    clearTimeout(nextRoundTimer.current);
+    nextRoundTimer.current = null;
+    stopSound();
+    setSuccessId(null);
+    setRound(null);
+    setRoundNumber(1);
+    setPhase('audio');
+    setScreen('menu');
+  };
 
   useEffect(() => {
     if (!round || phase !== 'audio') return undefined;
@@ -188,6 +220,13 @@ export default function App() {
       if (!mounted.current) return;
       nextRoundTimer.current = setTimeout(() => {
         setSuccessId(null);
+        if (roundNumber === 10) {
+          setRound(null);
+          setScreen('menu');
+          setRoundNumber(1);
+          return;
+        }
+        setRoundNumber(roundNumber + 1);
         setRound(makeRound(round.choices.map(({ id }) => id)));
         setPhase('audio');
       }, 2000);
@@ -238,11 +277,41 @@ export default function App() {
     );
   };
 
+  if (!fontsLoaded) return null;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar hidden />
       <View style={styles.stage}>
-        {round && renderChoices()}
+        {screen === 'menu' ? (
+          <View style={styles.menu}>
+            <Text style={styles.menuTitle}>Tom's Tunes</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Start instrument identification game"
+              onPress={startGame}
+              style={({ pressed }) => [styles.gameTile, pressed && styles.gameTilePressed]}
+            >
+              <Text style={styles.musicNotes}>♫</Text>
+              <Text style={styles.gameTileTitle}>Instrument sounds</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.game}>
+            <View style={styles.gameHeader}>
+              <Text style={styles.roundLabel}>Round {roundNumber} of 10</Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Return to main menu"
+                onPress={returnToMenu}
+                style={({ pressed }) => [styles.menuButton, pressed && styles.menuButtonPressed]}
+              >
+                <Text style={styles.menuButtonText}>Menu</Text>
+              </Pressable>
+            </View>
+            {round && renderChoices()}
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -257,6 +326,77 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 28,
     paddingVertical: 20,
+  },
+  menu: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 24,
+  },
+  menuTitle: {
+    color: '#26352C',
+    fontFamily: 'FredokaBold',
+    fontSize: 36,
+  },
+  gameTile: {
+    width: 260,
+    height: 220,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    borderRadius: 24,
+    borderWidth: 4,
+    borderColor: '#F2C14E',
+    backgroundColor: '#FFFDF6',
+  },
+  gameTilePressed: {
+    opacity: 0.78,
+    transform: [{ scale: 0.97 }],
+  },
+  musicNotes: {
+    color: '#32745A',
+    fontSize: 72,
+    fontWeight: '700',
+    lineHeight: 82,
+  },
+  gameTileTitle: {
+    color: '#26352C',
+    fontFamily: 'Fredoka',
+    fontSize: 20,
+    textAlign: 'center',
+  },
+  game: {
+    flex: 1,
+  },
+  gameHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  roundLabel: {
+    color: '#26352C',
+    fontFamily: 'Fredoka',
+    fontSize: 16,
+  },
+  menuButton: {
+    minWidth: 76,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    borderWidth: 2,
+    borderColor: '#32745A',
+    borderRadius: 14,
+    backgroundColor: '#FFFDF6',
+  },
+  menuButtonPressed: {
+    opacity: 0.72,
+  },
+  menuButtonText: {
+    color: '#32745A',
+    fontFamily: 'FredokaBold',
+    fontSize: 16,
   },
   twoChoices: {
     flex: 1,
@@ -313,8 +453,8 @@ const styles = StyleSheet.create({
   },
   label: {
     color: '#26352C',
+    fontFamily: 'Fredoka',
     fontSize: 20,
-    fontWeight: '600',
     textAlign: 'center',
   },
 });

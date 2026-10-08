@@ -9,8 +9,10 @@
     "build:android:apk": "npx eas-cli build --platform android --profile preview"
   },
   "dependencies": {
+    "@expo-google-fonts/fredoka": "^0.4.1",
     "expo": "~57.0.26",
     "expo-audio": "~57.0.5",
+    "expo-font": "~57.0.4",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
     "react-native": "0.86.3",
