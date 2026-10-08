@@ -24,6 +24,12 @@
     },
     "plugins": [
       "expo-audio",
+      [
+        "expo-navigation-bar",
+        {
+          "hidden": true
+        }
+      ],
       "expo-font"
     ],
     "extra": {

@@ -3,6 +3,7 @@ import {
   AppState,
   Animated,
   Image,
+  Platform,
   Pressable,
   SafeAreaView,
   StatusBar,
@@ -11,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { createAudioPlayer, setIsAudioActiveAsync } from 'expo-audio';
+import { NavigationBar } from 'expo-navigation-bar';
 import { useFonts } from 'expo-font';
 import { Fredoka_600SemiBold, Fredoka_700Bold } from '@expo-google-fonts/fredoka';
 
@@ -298,6 +300,7 @@ export default function App() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar hidden />
+      {Platform.OS === 'android' && <NavigationBar hidden />}
       <View style={styles.stage}>
         {screen === 'menu' ? (
           <View style={styles.menu}>
