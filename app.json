@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Tom's Tunes",
-    "slug": "toms-tunes",
+    "name": "toms-first-game",
+    "slug": "toms-first-game",
     "version": "1.0.0",
     "orientation": "landscape",
     "userInterfaceStyle": "light",
