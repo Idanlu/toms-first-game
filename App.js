@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
+  Image,
   Pressable,
   SafeAreaView,
   StatusBar,
@@ -11,18 +12,19 @@ import { createAudioPlayer } from 'expo-audio';
 
 // Change this value to 2, 3, or 4 to increase difficulty.
 const TOTAL_OPTIONS = 2;
+const INCORRECT_PREVIEW_MS = 3000;
 
 const INSTRUMENTS = [
-  { id: 'piano', label: 'Piano', emoji: '\uD83C\uDFB9', sound: require('./assets/sounds/piano.wav') },
-  { id: 'electric-guitar', label: 'Electric guitar', emoji: '\uD83C\uDFB8', sound: require('./assets/sounds/electric_guitar.wav') },
-  { id: 'nylon-guitar', label: 'Nylon guitar', emoji: '\uD83C\uDFB8', sound: require('./assets/sounds/nylon_guitar.wav') },
-  { id: 'flute', label: 'Flute', emoji: '\uD83E\uDE88', sound: require('./assets/sounds/flute.wav') },
-  { id: 'recorder', label: 'Recorder', emoji: '\uD83E\uDE88', sound: require('./assets/sounds/recorder.wav') },
-  { id: 'tenor-sax', label: 'Tenor sax', emoji: '\uD83C\uDFB7', sound: require('./assets/sounds/tenor_sax.wav') },
-  { id: 'trumpet', label: 'Trumpet', emoji: '\uD83C\uDFBA', sound: require('./assets/sounds/trumpet.wav') },
-  { id: 'violin', label: 'Violin', emoji: '\uD83C\uDFBB', sound: require('./assets/sounds/violin.wav') },
-  { id: 'drums', label: 'Drums', emoji: '\uD83E\uDD41', sound: require('./assets/sounds/drums.wav') },
-  { id: 'xylophone', label: 'Xylophone', emoji: '\uD83E\uDE87', sound: require('./assets/sounds/xylophone.wav') },
+  { id: 'piano', label: 'Piano', image: require('./assets/symbols/piano.png'), sound: require('./assets/sounds/piano.wav') },
+  { id: 'electric-guitar', label: 'Electric guitar', image: require('./assets/symbols/electric_guitar.png'), sound: require('./assets/sounds/electric_guitar.wav') },
+  { id: 'nylon-guitar', label: 'Nylon guitar', image: require('./assets/symbols/nylon_guitar.png'), sound: require('./assets/sounds/nylon_guitar.wav') },
+  { id: 'flute', label: 'Flute', image: require('./assets/symbols/flute.png'), sound: require('./assets/sounds/flute.wav') },
+  { id: 'recorder', label: 'Recorder', image: require('./assets/symbols/recorder.png'), sound: require('./assets/sounds/recorder.wav') },
+  { id: 'tenor-sax', label: 'Tenor sax', image: require('./assets/symbols/tenor_sax.png'), sound: require('./assets/sounds/tenor_sax.wav') },
+  { id: 'trumpet', label: 'Trumpet', image: require('./assets/symbols/trumpet.png'), sound: require('./assets/sounds/trumpet.wav') },
+  { id: 'violin', label: 'Violin', image: require('./assets/symbols/violin.png'), sound: require('./assets/sounds/violin.wav') },
+  { id: 'drums', label: 'Drums', image: require('./assets/symbols/drums.png'), sound: require('./assets/sounds/drums.wav') },
+  { id: 'xylophone', label: 'Xylophone', image: require('./assets/symbols/xylophone.png'), sound: require('./assets/sounds/xylophone.wav') },
 ];
 
 function shuffled(items) {
@@ -34,8 +36,9 @@ function shuffled(items) {
   return result;
 }
 
-function makeRound() {
-  const [target, ...decoys] = shuffled(INSTRUMENTS);
+function makeRound(previousChoiceIds = []) {
+  const available = INSTRUMENTS.filter(({ id }) => !previousChoiceIds.includes(id));
+  const [target, ...decoys] = shuffled(available);
   return {
     target,
     choices: shuffled([target, ...decoys.slice(0, TOTAL_OPTIONS - 1)]),
@@ -86,7 +89,7 @@ function InstrumentButton({ instrument, disabled, onPress, success, choiceStyle 
           { opacity, transform: [{ scale }] },
         ]}
       >
-        <Animated.Text style={styles.emoji}>{instrument.emoji}</Animated.Text>
+        <Animated.Image source={instrument.image} resizeMode="contain" style={styles.instrumentImage} />
         <Animated.Text style={styles.label}>{instrument.label}</Animated.Text>
       </Animated.View>
     </Pressable>
@@ -99,6 +102,7 @@ export default function App() {
   const [successId, setSuccessId] = useState(null);
   const soundRef = useRef(null);
   const soundSubscriptionRef = useRef(null);
+  const teachingTimer = useRef(null);
   const nextRoundTimer = useRef(null);
   const mounted = useRef(true);
 
@@ -140,6 +144,7 @@ export default function App() {
     setRound(makeRound());
     return () => {
       mounted.current = false;
+      clearTimeout(teachingTimer.current);
       clearTimeout(nextRoundTimer.current);
       stopSound();
     };
@@ -157,23 +162,36 @@ export default function App() {
   }, [round, phase]);
 
   const handleChoice = async (instrument) => {
-    if (phase !== 'input') return;
+    if (phase !== 'input' && phase !== 'audio') return;
     if (instrument.id !== round.target.id) {
       setPhase('teaching');
-      await playClip(instrument.sound, () => {
+      const finishTeaching = () => {
+        clearTimeout(teachingTimer.current);
+        teachingTimer.current = null;
         if (mounted.current) setPhase('input');
+      };
+      teachingTimer.current = setTimeout(() => {
+        teachingTimer.current = null;
+        stopSound();
+        finishTeaching();
+      }, INCORRECT_PREVIEW_MS);
+      await playClip(instrument.sound, () => {
+        finishTeaching();
       });
       return;
     }
 
+    stopSound();
     setSuccessId(instrument.id);
     setPhase('success');
-    nextRoundTimer.current = setTimeout(() => {
+    playClip(require('./assets/sounds/success.wav'), () => {
       if (!mounted.current) return;
-      setSuccessId(null);
-      setRound(makeRound());
-      setPhase('audio');
-    }, 2000);
+      nextRoundTimer.current = setTimeout(() => {
+        setSuccessId(null);
+        setRound(makeRound(round.choices.map(({ id }) => id)));
+        setPhase('audio');
+      }, 2000);
+    });
   };
 
   const renderChoices = () => {
@@ -184,7 +202,7 @@ export default function App() {
             <InstrumentButton
               key={instrument.id}
               instrument={instrument}
-              disabled={phase !== 'input'}
+              disabled={phase !== 'input' && phase !== 'audio'}
               onPress={handleChoice}
               success={successId === instrument.id}
             />
@@ -208,7 +226,7 @@ export default function App() {
               <InstrumentButton
                 key={instrument.id}
                 instrument={instrument}
-                disabled={phase !== 'input'}
+                disabled={phase !== 'input' && phase !== 'audio'}
                 onPress={handleChoice}
                 success={successId === instrument.id}
                 choiceStyle={TOTAL_OPTIONS === 3 && rowIndex === 1 && styles.centeredChoice}
@@ -286,6 +304,12 @@ const styles = StyleSheet.create({
   emoji: {
     fontSize: 112,
     textAlign: 'center',
+  },
+  instrumentImage: {
+    width: '78%',
+    height: '72%',
+    maxWidth: 280,
+    maxHeight: 260,
   },
   label: {
     color: '#26352C',
