@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  AppState,
   Animated,
   Image,
   Pressable,
@@ -9,7 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { createAudioPlayer } from 'expo-audio';
+import { createAudioPlayer, setIsAudioActiveAsync } from 'expo-audio';
 import { useFonts } from 'expo-font';
 import { Fredoka_600SemiBold, Fredoka_700Bold } from '@expo-google-fonts/fredoka';
 
@@ -111,11 +112,13 @@ export default function App() {
   const [successId, setSuccessId] = useState(null);
   const soundRef = useRef(null);
   const soundSubscriptionRef = useRef(null);
+  const playRequestRef = useRef(0);
   const teachingTimer = useRef(null);
   const nextRoundTimer = useRef(null);
   const mounted = useRef(true);
 
   const stopSound = () => {
+    playRequestRef.current += 1;
     soundSubscriptionRef.current?.remove();
     soundSubscriptionRef.current = null;
     const activePlayer = soundRef.current;
@@ -125,9 +128,12 @@ export default function App() {
     activePlayer.remove();
   };
 
-  const playClip = (source, onFinished) => {
+  const playClip = async (source, onFinished) => {
     stopSound();
+    const playRequest = playRequestRef.current;
     try {
+      await setIsAudioActiveAsync(true);
+      if (playRequestRef.current !== playRequest) return;
       const player = createAudioPlayer(source, { downloadFirst: true });
       soundRef.current = player;
       const subscription = player.addListener('playbackStatusUpdate', (status) => {
@@ -143,6 +149,7 @@ export default function App() {
       soundSubscriptionRef.current = subscription;
       player.play();
     } catch (_error) {
+      if (playRequestRef.current !== playRequest) return;
       stopSound();
       onFinished?.();
     }
@@ -156,6 +163,15 @@ export default function App() {
       clearTimeout(nextRoundTimer.current);
       stopSound();
     };
+  }, []);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        setIsAudioActiveAsync(true).catch(() => {});
+      }
+    });
+    return () => subscription.remove();
   }, []);
 
   const startGame = () => {
