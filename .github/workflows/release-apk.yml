@@ -1,0 +1,121 @@
+name: Build and Publish Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 'Publish as a GitHub Release (also saved as workflow artifact)'
+        type: boolean
+        required: false
+        default: true
+      tag_name:
+        description: 'Release tag name (e.g. v1.0.0; if blank, uses package.json version)'
+        type: string
+        required: false
+        default: ''
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Android Release APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    env:
+      GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Prebuild native Android project
+        run: npx expo prebuild --platform android --clean
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x android/gradlew
+
+      - name: Build Android Release APK
+        run: |
+          cd android
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Prepare APK and release metadata
+        id: meta
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "pkg_version=$PKG_VERSION" >> "$GITHUB_OUTPUT"
+
+          # Determine the tag name
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            INPUT_TAG="${{ inputs.tag_name }}"
+            if [ -n "$INPUT_TAG" ]; then
+              TAG_NAME="$INPUT_TAG"
+            else
+              TAG_NAME="v$PKG_VERSION"
+            fi
+          else
+            TAG_NAME="${{ github.ref_name }}"
+          fi
+          echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
+
+          # Find the generated APK
+          SOURCE_APK=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          if [ -z "$SOURCE_APK" ]; then
+            echo "Error: Release APK not found in android/app/build/outputs/apk/release" >&2
+            exit 1
+          fi
+
+          DEST_APK="toms-first-game-${TAG_NAME}.apk"
+          cp "$SOURCE_APK" "$DEST_APK"
+          echo "apk_path=$DEST_APK" >> "$GITHUB_OUTPUT"
+          echo "apk_filename=$DEST_APK" >> "$GITHUB_OUTPUT"
+          echo "Found APK: $SOURCE_APK, copied to $DEST_APK"
+
+      - name: Upload APK as Workflow Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.apk_filename }}
+          path: ${{ steps.meta.outputs.apk_path }}
+          retention-days: 30
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.publish_release)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag_name }}
+          name: Tom's First Game ${{ steps.meta.outputs.tag_name }}
+          files: ${{ steps.meta.outputs.apk_path }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          target_commitish: ${{ github.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

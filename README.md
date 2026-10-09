@@ -15,7 +15,24 @@ Press `a` in the Expo terminal to open Android, or scan the QR code with Expo Go
 
 ## Install on an Android phone
 
-An installable APK can be built with Expo Application Services (EAS):
+### Option 1: GitHub Actions (Automated Release APK)
+
+Push a version tag to GitHub to automatically build and publish a release APK:
+
+```sh
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+You can also trigger builds manually in GitHub under the **Actions** tab by choosing **Build and Publish Release APK** and clicking **Run workflow**.
+
+Once complete:
+- The APK will be attached as a downloadable asset on the **Releases** page (`toms-first-game-v1.0.0.apk`).
+- It is also available as a build artifact in the workflow run summary.
+
+### Option 2: Expo Application Services (EAS)
+
+An installable APK can also be built with Expo Application Services (EAS):
 
 1. Create or sign in to an Expo account with `npx eas-cli login`.
 2. Run `npm run build:android:apk`. On the first build, follow the prompts to create or link the EAS project.
