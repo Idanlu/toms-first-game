@@ -5,12 +5,12 @@ import {
   Image,
   Platform,
   Pressable,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { createAudioPlayer, setIsAudioActiveAsync } from 'expo-audio';
 import { NavigationBar } from 'expo-navigation-bar';
 import { useFonts } from 'expo-font';
@@ -21,26 +21,54 @@ const TOTAL_OPTIONS = 2;
 const INCORRECT_PREVIEW_MS = 3000;
 
 const INSTRUMENTS = [
-  { id: 'piano', label: 'Piano', image: require('./assets/symbols/piano.png'), sound: require('./assets/sounds/piano.wav') },
-  { id: 'accordion', label: 'Accordion', image: require('./assets/symbols/accordion.png'), sound: require('./assets/sounds/accordion.wav') },
-  { id: 'cello', label: 'Cello', image: require('./assets/symbols/cello.png'), sound: require('./assets/sounds/cello.wav') },
-  { id: 'clarinet', label: 'Clarinet', image: require('./assets/symbols/clarinet.png'), sound: require('./assets/sounds/clarinet.wav') },
-  { id: 'darbuka', label: 'Darbuka', image: require('./assets/symbols/darbuka.png'), sound: require('./assets/sounds/darbuka.wav') },
-  { id: 'double-bass', label: 'Double bass', image: require('./assets/symbols/double_bass.png'), sound: require('./assets/sounds/double_bass.wav') },
-  { id: 'electric-guitar', label: 'Electric guitar', image: require('./assets/symbols/electric_guitar.png'), sound: require('./assets/sounds/electric_guitar.wav') },
-  { id: 'harmonica', label: 'Harmonica', image: require('./assets/symbols/harmonica.png'), sound: require('./assets/sounds/harmonica.wav') },
-  { id: 'harp', label: 'Harp', image: require('./assets/symbols/harp.png'), sound: require('./assets/sounds/harp.wav') },
-  { id: 'maracas', label: 'Maracas', image: require('./assets/symbols/maracas.png'), sound: require('./assets/sounds/maracas.wav') },
-  { id: 'nylon-guitar', label: 'Nylon guitar', image: require('./assets/symbols/nylon_guitar.png'), sound: require('./assets/sounds/nylon_guitar.wav') },
-  { id: 'flute', label: 'Flute', image: require('./assets/symbols/flute.png'), sound: require('./assets/sounds/flute.wav') },
-  { id: 'recorder', label: 'Recorder', image: require('./assets/symbols/recorder.png'), sound: require('./assets/sounds/recorder.wav') },
-  { id: 'tenor-sax', label: 'Tenor sax', image: require('./assets/symbols/tenor_sax.png'), sound: require('./assets/sounds/tenor_sax.wav') },
-  { id: 'trumpet', label: 'Trumpet', image: require('./assets/symbols/trumpet.png'), sound: require('./assets/sounds/trumpet.wav') },
-  { id: 'triangle', label: 'Triangle', image: require('./assets/symbols/triangle.png'), sound: require('./assets/sounds/triangle.wav') },
-  { id: 'violin', label: 'Violin', image: require('./assets/symbols/violin.png'), sound: require('./assets/sounds/violin.wav') },
-  { id: 'drums', label: 'Drums', image: require('./assets/symbols/drums.png'), sound: require('./assets/sounds/drums.wav') },
-  { id: 'xylophone', label: 'Xylophone', image: require('./assets/symbols/xylophone.png'), sound: require('./assets/sounds/xylophone.wav') },
+  { id: 'piano', label: 'Piano', image: require('./assets/symbols/piano.png'), sound: require('./assets/sounds/instruments/piano.wav') },
+  { id: 'accordion', label: 'Accordion', image: require('./assets/symbols/accordion.png'), sound: require('./assets/sounds/instruments/accordion.wav') },
+  { id: 'cello', label: 'Cello', image: require('./assets/symbols/cello.png'), sound: require('./assets/sounds/instruments/cello.wav') },
+  { id: 'clarinet', label: 'Clarinet', image: require('./assets/symbols/clarinet.png'), sound: require('./assets/sounds/instruments/clarinet.wav') },
+  { id: 'darbuka', label: 'Darbuka', image: require('./assets/symbols/darbuka.png'), sound: require('./assets/sounds/instruments/darbuka.wav') },
+  { id: 'double-bass', label: 'Double bass', image: require('./assets/symbols/double_bass.png'), sound: require('./assets/sounds/instruments/double_bass.wav') },
+  { id: 'electric-guitar', label: 'Electric guitar', image: require('./assets/symbols/electric_guitar.png'), sound: require('./assets/sounds/instruments/electric_guitar.wav') },
+  { id: 'harmonica', label: 'Harmonica', image: require('./assets/symbols/harmonica.png'), sound: require('./assets/sounds/instruments/harmonica.wav') },
+  { id: 'harp', label: 'Harp', image: require('./assets/symbols/harp.png'), sound: require('./assets/sounds/instruments/harp.wav') },
+  { id: 'maracas', label: 'Maracas', image: require('./assets/symbols/maracas.png'), sound: require('./assets/sounds/instruments/maracas.wav') },
+  { id: 'nylon-guitar', label: 'Nylon guitar', image: require('./assets/symbols/nylon_guitar.png'), sound: require('./assets/sounds/instruments/nylon_guitar.wav') },
+  { id: 'flute', label: 'Flute', image: require('./assets/symbols/flute.png'), sound: require('./assets/sounds/instruments/flute.wav') },
+  { id: 'recorder', label: 'Recorder', image: require('./assets/symbols/recorder.png'), sound: require('./assets/sounds/instruments/recorder.wav') },
+  { id: 'tenor-sax', label: 'Tenor sax', image: require('./assets/symbols/tenor_sax.png'), sound: require('./assets/sounds/instruments/tenor_sax.wav') },
+  { id: 'trumpet', label: 'Trumpet', image: require('./assets/symbols/trumpet.png'), sound: require('./assets/sounds/instruments/trumpet.wav') },
+  { id: 'triangle', label: 'Triangle', image: require('./assets/symbols/triangle.png'), sound: require('./assets/sounds/instruments/triangle.wav') },
+  { id: 'violin', label: 'Violin', image: require('./assets/symbols/violin.png'), sound: require('./assets/sounds/instruments/violin.wav') },
+  { id: 'drums', label: 'Drums', image: require('./assets/symbols/drums.png'), sound: require('./assets/sounds/instruments/drums.wav') },
+  { id: 'xylophone', label: 'Xylophone', image: require('./assets/symbols/xylophone.png'), sound: require('./assets/sounds/instruments/xylophone.wav') },
 ];
+
+const NUMBERS = Array.from({ length: 10 }, (_, value) => ({ id: String(value), label: String(value) }));
+const NUMBER_SOUNDS = {
+  hebrew: {
+    0: require('./assets/sounds/numbers/processed/אפס.wav'),
+    1: require('./assets/sounds/numbers/processed/אחת.wav'),
+    2: require('./assets/sounds/numbers/processed/שתיים.wav'),
+    3: require('./assets/sounds/numbers/processed/שלוש.wav'),
+    4: require('./assets/sounds/numbers/processed/ארבע.wav'),
+    5: require('./assets/sounds/numbers/processed/חמש.wav'),
+    6: require('./assets/sounds/numbers/processed/שש.wav'),
+    7: require('./assets/sounds/numbers/processed/שבע.wav'),
+    8: require('./assets/sounds/numbers/processed/שמונה.wav'),
+    9: require('./assets/sounds/numbers/processed/תשע.wav'),
+  },
+  russian: {
+    0: require('./assets/sounds/numbers/processed/ноль.wav'),
+    1: require('./assets/sounds/numbers/processed/один.wav'),
+    2: require('./assets/sounds/numbers/processed/два.wav'),
+    3: require('./assets/sounds/numbers/processed/три.wav'),
+    4: require('./assets/sounds/numbers/processed/четыре.wav'),
+    5: require('./assets/sounds/numbers/processed/пять.wav'),
+    6: require('./assets/sounds/numbers/processed/шесть.wav'),
+    7: require('./assets/sounds/numbers/processed/семь.wav'),
+    8: require('./assets/sounds/numbers/processed/восемь.wav'),
+    9: require('./assets/sounds/numbers/processed/девять.wav'),
+  },
+};
 
 function shuffled(items) {
   const result = [...items];
@@ -61,7 +89,23 @@ function makeRound(previousChoiceIds = []) {
   };
 }
 
-function InstrumentButton({ instrument, disabled, onPress, success, choiceStyle }) {
+function makeNumberRound(previousChoiceIds = []) {
+  const language = Math.random() < 0.5 ? 'hebrew' : 'russian';
+  const sounds = NUMBER_SOUNDS[language];
+  const available = NUMBERS.filter(({ id }) => !previousChoiceIds.includes(id));
+  const [target, ...decoys] = shuffled(available);
+  const choices = shuffled([target, ...decoys.slice(0, TOTAL_OPTIONS - 1)])
+    .map((number) => ({ ...number, sound: sounds[number.id] }));
+
+  return {
+    target: choices.find(({ id }) => id === target.id),
+    choices,
+    language,
+    id: `${Date.now()}-${Math.random()}`,
+  };
+}
+
+  function ChoiceButton({ choice, numberGame, disabled, onPress, success, choiceStyle }) {
   const scale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -84,11 +128,11 @@ function InstrumentButton({ instrument, disabled, onPress, success, choiceStyle 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={instrument.label}
+      accessibilityLabel={choice.label}
       disabled={disabled}
       onPressIn={pressIn}
       onPressOut={pressOut}
-      onPress={() => onPress(instrument)}
+      onPress={() => onPress(choice)}
       style={[styles.choice, choiceStyle]}
     >
       <Animated.View
@@ -97,8 +141,14 @@ function InstrumentButton({ instrument, disabled, onPress, success, choiceStyle 
           { transform: [{ scale }] },
         ]}
       >
-        <Animated.Image source={instrument.image} resizeMode="contain" style={styles.instrumentImage} />
-        <Animated.Text style={styles.label}>{instrument.label}</Animated.Text>
+        {numberGame ? (
+          <Animated.Text style={styles.numberLabel}>{choice.label}</Animated.Text>
+        ) : (
+          <>
+            <Animated.Image source={choice.image} resizeMode="contain" style={styles.instrumentImage} />
+            <Animated.Text style={styles.label}>{choice.label}</Animated.Text>
+          </>
+        )}
       </Animated.View>
     </Pressable>
   );
@@ -109,6 +159,7 @@ export default function App() {
     Fredoka: Fredoka_600SemiBold,
     FredokaBold: Fredoka_700Bold,
   });
+      const [gameType, setGameType] = useState('instruments');
   const [round, setRound] = useState(null);
   const [screen, setScreen] = useState('menu');
   const [roundNumber, setRoundNumber] = useState(1);
@@ -178,14 +229,15 @@ export default function App() {
     return () => subscription.remove();
   }, []);
 
-  const startGame = () => {
+  const startGame = (type) => {
     clearTimeout(teachingTimer.current);
     clearTimeout(nextRoundTimer.current);
     stopSound();
     setRoundNumber(1);
     setSuccessId(null);
     setPhase('audio');
-    setRound(makeRound());
+    setGameType(type);
+    setRound(type === 'numbers' ? makeNumberRound() : makeRound());
     setScreen('game');
   };
 
@@ -213,9 +265,9 @@ export default function App() {
     };
   }, [round, phase]);
 
-  const handleChoice = async (instrument) => {
+  const handleChoice = async (choice) => {
     if (phase !== 'input' && phase !== 'audio') return;
-    if (instrument.id !== round.target.id) {
+    if (choice.id !== round.target.id) {
       setPhase('teaching');
       const finishTeaching = () => {
         clearTimeout(teachingTimer.current);
@@ -227,16 +279,16 @@ export default function App() {
         stopSound();
         finishTeaching();
       }, INCORRECT_PREVIEW_MS);
-      await playClip(instrument.sound, () => {
+      await playClip(choice.sound, () => {
         finishTeaching();
       });
       return;
     }
 
     stopSound();
-    setSuccessId(instrument.id);
+    setSuccessId(choice.id);
     setPhase('success');
-    playClip(require('./assets/sounds/success.wav'), () => {
+    playClip(require('./assets/sounds/instruments/success.wav'), () => {
       if (!mounted.current) return;
       nextRoundTimer.current = setTimeout(() => {
         setSuccessId(null);
@@ -247,7 +299,10 @@ export default function App() {
           return;
         }
         setRoundNumber(roundNumber + 1);
-        setRound(makeRound(round.choices.map(({ id }) => id)));
+        const previousChoiceIds = round.choices.map(({ id }) => id);
+        setRound(gameType === 'numbers'
+          ? makeNumberRound(previousChoiceIds)
+          : makeRound(previousChoiceIds));
         setPhase('audio');
       }, 2000);
     });
@@ -257,13 +312,14 @@ export default function App() {
     if (TOTAL_OPTIONS === 2) {
       return (
         <View style={styles.twoChoices}>
-          {round.choices.map((instrument) => (
-            <InstrumentButton
-              key={instrument.id}
-              instrument={instrument}
+          {round.choices.map((choice) => (
+            <ChoiceButton
+              key={choice.id}
+              choice={choice}
+              numberGame={gameType === 'numbers'}
               disabled={phase !== 'input' && phase !== 'audio'}
               onPress={handleChoice}
-              success={successId === instrument.id}
+              success={successId === choice.id}
             />
           ))}
         </View>
@@ -281,13 +337,14 @@ export default function App() {
             key={rowIndex}
             style={[styles.gridRow, TOTAL_OPTIONS === 3 && rowIndex === 1 && styles.centeredRow]}
           >
-            {row.map((instrument) => (
-              <InstrumentButton
-                key={instrument.id}
-                instrument={instrument}
+            {row.map((choice) => (
+              <ChoiceButton
+                key={choice.id}
+                choice={choice}
+                numberGame={gameType === 'numbers'}
                 disabled={phase !== 'input' && phase !== 'audio'}
                 onPress={handleChoice}
-                success={successId === instrument.id}
+                success={successId === choice.id}
                 choiceStyle={TOTAL_OPTIONS === 3 && rowIndex === 1 && styles.centeredChoice}
               />
             ))}
@@ -307,15 +364,26 @@ export default function App() {
         {screen === 'menu' ? (
           <View style={styles.menu}>
             <Text style={styles.menuTitle}>Tom's Tunes</Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Start instrument identification game"
-              onPress={startGame}
-              style={({ pressed }) => [styles.gameTile, pressed && styles.gameTilePressed]}
-            >
-              <Text style={styles.musicNotes}>♫</Text>
-              <Text style={styles.gameTileTitle}>Instrument sounds</Text>
-            </Pressable>
+            <View style={styles.gameTiles}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Start instrument identification game"
+                onPress={() => startGame('instruments')}
+                style={({ pressed }) => [styles.gameTile, pressed && styles.gameTilePressed]}
+              >
+                <Text style={styles.musicNotes}>♫</Text>
+                <Text style={styles.gameTileTitle}>Instrument sounds</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Start number listening game"
+                onPress={() => startGame('numbers')}
+                style={({ pressed }) => [styles.gameTile, styles.numberGameTile, pressed && styles.gameTilePressed]}
+              >
+                <Text style={styles.numberIcon}>123</Text>
+                <Text style={styles.gameTileTitle}>Number sounds</Text>
+              </Pressable>
+            </View>
           </View>
         ) : (
           <View style={styles.game}>
@@ -359,8 +427,15 @@ const styles = StyleSheet.create({
     fontFamily: 'FredokaBold',
     fontSize: 36,
   },
+  gameTiles: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 16,
+  },
   gameTile: {
-    width: 260,
+    flex: 1,
+    maxWidth: 260,
     height: 220,
     alignItems: 'center',
     justifyContent: 'center',
@@ -369,6 +444,9 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: '#F2C14E',
     backgroundColor: '#FFFDF6',
+  },
+  numberGameTile: {
+    borderColor: '#32745A',
   },
   gameTilePressed: {
     opacity: 0.78,
@@ -379,6 +457,11 @@ const styles = StyleSheet.create({
     fontSize: 72,
     fontWeight: '700',
     lineHeight: 82,
+  },
+  numberIcon: {
+    color: '#32745A',
+    fontFamily: 'FredokaBold',
+    fontSize: 58,
   },
   gameTileTitle: {
     color: '#26352C',
@@ -476,6 +559,12 @@ const styles = StyleSheet.create({
     color: '#26352C',
     fontFamily: 'Fredoka',
     fontSize: 20,
+    textAlign: 'center',
+  },
+  numberLabel: {
+    color: '#26352C',
+    fontFamily: 'FredokaBold',
+    fontSize: 132,
     textAlign: 'center',
   },
 });

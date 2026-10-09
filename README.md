@@ -1,6 +1,8 @@
 # toms-first-game
 
-A landscape Expo game that asks Tom to find the instrument he hears. Instrument sounds are bundled as offline WAV files.
+A landscape Expo game with instrument-listening and number-listening games. Number audio currently supports Hebrew and Russian, with one language used for each round.
+
+The original number recordings are kept as M4A files. The game uses click-reduced, level-matched WAV copies in `assets/sounds/numbers/processed`. To regenerate them, install FFmpeg and run `pwsh -File scripts/process-number-audio.ps1`.
 
 ## Run
 
