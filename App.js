@@ -189,7 +189,7 @@ export default function App() {
     try {
       await setIsAudioActiveAsync(true);
       if (playRequestRef.current !== playRequest) return;
-      const player = createAudioPlayer(source, { downloadFirst: true });
+      const player = createAudioPlayer(source);
       soundRef.current = player;
       const subscription = player.addListener('playbackStatusUpdate', (status) => {
         if (!status.didJustFinish && !status.error) return;
