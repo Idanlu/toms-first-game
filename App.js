@@ -63,7 +63,6 @@ function makeRound(previousChoiceIds = []) {
 
 function InstrumentButton({ instrument, disabled, onPress, success, choiceStyle }) {
   const scale = useRef(new Animated.Value(1)).current;
-  const opacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (!success) return;
@@ -75,17 +74,11 @@ function InstrumentButton({ instrument, disabled, onPress, success, choiceStyle 
   }, [scale, success]);
 
   const pressIn = () => {
-    Animated.parallel([
-      Animated.timing(scale, { toValue: 0.94, duration: 70, useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 0.72, duration: 70, useNativeDriver: true }),
-    ]).start();
+    Animated.timing(scale, { toValue: 0.94, duration: 70, useNativeDriver: true }).start();
   };
 
   const pressOut = () => {
-    Animated.parallel([
-      Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 24 }),
-      Animated.timing(opacity, { toValue: 1, duration: 110, useNativeDriver: true }),
-    ]).start();
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 24 }).start();
   };
 
   return (
@@ -101,7 +94,7 @@ function InstrumentButton({ instrument, disabled, onPress, success, choiceStyle 
       <Animated.View
         style={[
           styles.instrument,
-          { opacity, transform: [{ scale }] },
+          { transform: [{ scale }] },
         ]}
       >
         <Animated.Image source={instrument.image} resizeMode="contain" style={styles.instrumentImage} />
