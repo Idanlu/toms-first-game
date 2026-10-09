@@ -42,33 +42,28 @@ const INSTRUMENTS = [
   { id: 'xylophone', label: 'Xylophone', image: require('./assets/symbols/xylophone.png'), sound: require('./assets/sounds/instruments/xylophone.wav') },
 ];
 
-const NUMBERS = Array.from({ length: 10 }, (_, value) => ({ id: String(value), label: String(value) }));
-const NUMBER_SOUNDS = {
-  hebrew: {
-    0: require('./assets/sounds/numbers/אפס.wav'),
-    1: require('./assets/sounds/numbers/אחת.wav'),
-    2: require('./assets/sounds/numbers/שתיים.wav'),
-    3: require('./assets/sounds/numbers/שלוש.wav'),
-    4: require('./assets/sounds/numbers/ארבע.wav'),
-    5: require('./assets/sounds/numbers/חמש.wav'),
-    6: require('./assets/sounds/numbers/שש.wav'),
-    7: require('./assets/sounds/numbers/שבע.wav'),
-    8: require('./assets/sounds/numbers/שמונה.wav'),
-    9: require('./assets/sounds/numbers/תשע.wav'),
-  },
-  russian: {
-    0: require('./assets/sounds/numbers/ноль.wav'),
-    1: require('./assets/sounds/numbers/один.wav'),
-    2: require('./assets/sounds/numbers/два.wav'),
-    3: require('./assets/sounds/numbers/три.wav'),
-    4: require('./assets/sounds/numbers/четыре.wav'),
-    5: require('./assets/sounds/numbers/пять.wav'),
-    6: require('./assets/sounds/numbers/шесть.wav'),
-    7: require('./assets/sounds/numbers/семь.wav'),
-    8: require('./assets/sounds/numbers/восемь.wav'),
-    9: require('./assets/sounds/numbers/девять.wav'),
-  },
-};
+const NUMBER_CHOICES = [
+  { id: '0', label: '0', language: 'hebrew', sound: require('./assets/sounds/numbers/אפס.wav') },
+  { id: '1', label: '1', language: 'hebrew', sound: require('./assets/sounds/numbers/אחת.wav') },
+  { id: '2', label: '2', language: 'hebrew', sound: require('./assets/sounds/numbers/שתיים.wav') },
+  { id: '3', label: '3', language: 'hebrew', sound: require('./assets/sounds/numbers/שלוש.wav') },
+  { id: '4', label: '4', language: 'hebrew', sound: require('./assets/sounds/numbers/ארבע.wav') },
+  { id: '5', label: '5', language: 'hebrew', sound: require('./assets/sounds/numbers/חמש.wav') },
+  { id: '6', label: '6', language: 'hebrew', sound: require('./assets/sounds/numbers/שש.wav') },
+  { id: '7', label: '7', language: 'hebrew', sound: require('./assets/sounds/numbers/שבע.wav') },
+  { id: '8', label: '8', language: 'hebrew', sound: require('./assets/sounds/numbers/שמונה.wav') },
+  { id: '9', label: '9', language: 'hebrew', sound: require('./assets/sounds/numbers/תשע.wav') },
+  { id: '0', label: '0', language: 'russian', sound: require('./assets/sounds/numbers/ноль.wav') },
+  { id: '1', label: '1', language: 'russian', sound: require('./assets/sounds/numbers/один.wav') },
+  { id: '2', label: '2', language: 'russian', sound: require('./assets/sounds/numbers/два.wav') },
+  { id: '3', label: '3', language: 'russian', sound: require('./assets/sounds/numbers/три.wav') },
+  { id: '4', label: '4', language: 'russian', sound: require('./assets/sounds/numbers/четыре.wav') },
+  { id: '5', label: '5', language: 'russian', sound: require('./assets/sounds/numbers/пять.wav') },
+  { id: '6', label: '6', language: 'russian', sound: require('./assets/sounds/numbers/шесть.wav') },
+  { id: '7', label: '7', language: 'russian', sound: require('./assets/sounds/numbers/семь.wav') },
+  { id: '8', label: '8', language: 'russian', sound: require('./assets/sounds/numbers/восемь.wav') },
+  { id: '9', label: '9', language: 'russian', sound: require('./assets/sounds/numbers/девять.wav') },
+];
 
 function shuffled(items) {
   const result = [...items];
@@ -91,11 +86,11 @@ function makeRound(previousChoiceIds = []) {
 
 function makeNumberRound(previousChoiceIds = []) {
   const language = Math.random() < 0.5 ? 'hebrew' : 'russian';
-  const sounds = NUMBER_SOUNDS[language];
-  const available = NUMBERS.filter(({ id }) => !previousChoiceIds.includes(id));
+  const available = NUMBER_CHOICES.filter(({ id, language: numberLanguage }) => (
+    numberLanguage === language && !previousChoiceIds.includes(id)
+  ));
   const [target, ...decoys] = shuffled(available);
-  const choices = shuffled([target, ...decoys.slice(0, TOTAL_OPTIONS - 1)])
-    .map((number) => ({ ...number, sound: sounds[number.id] }));
+  const choices = shuffled([target, ...decoys.slice(0, TOTAL_OPTIONS - 1)]);
 
   return {
     target: choices.find(({ id }) => id === target.id),
